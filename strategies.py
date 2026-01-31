@@ -15,7 +15,7 @@ def start_run_in_circle():
         for direction in ['up', 'left', 'down', 'right']:
             if not _run_circle_active:
                 break
-            print(f"[RunInCircle] Moving {direction.upper()} for 1s")
+            print(f"[RunInCircle] Moving {direction.upper()} for 0.5s")
             move(direction, 0.5)
 
 def stop_run_in_circle():
