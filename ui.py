@@ -2,8 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 from foxhole_status import is_foxhole_running
 
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageDraw
 from screen_capture import ScreenCaptureProcessor
+
+from object_detection import ObjectDetector
+from preprocessing import preprocess_image
+from foxhole_classes import CLASS_NAMES
 
 
 class FoxholeMonitorUI:
@@ -13,6 +17,7 @@ class FoxholeMonitorUI:
         self.root.attributes("-topmost", True)
         self.status_label = ttk.Label(root, text="Checking...", font=("Arial", 12))
         self.capture_processor = capture_processor
+        self.detector = ObjectDetector()  # YOLOv8n по умолчанию
         self.status_label.pack(padx=20, pady=10)
         self.strategy_label = ttk.Label(
             root, text="Strategies:", font=("Arial", 14, "bold")
@@ -62,7 +67,22 @@ class FoxholeMonitorUI:
     def update_image_loop(self):
         frame = self.capture_processor.get_latest_frame()
         if frame is not None:
-            frame_pil = Image.fromarray(frame)
+            # Анализ кадра нейросетью
+            processed = preprocess_image(frame)
+            results = self.detector.detect(processed)
+            # Визуализация боксов
+            frame_pil = Image.fromarray(processed)
+            draw = ImageDraw.Draw(frame_pil)
+            if hasattr(results, 'boxes') and results.boxes is not None:
+                boxes = results.boxes.xyxy.cpu().numpy() if hasattr(results.boxes.xyxy, 'cpu') else results.boxes.xyxy
+                confs = results.boxes.conf.cpu().numpy() if hasattr(results.boxes.conf, 'cpu') else results.boxes.conf
+                clss = results.boxes.cls.cpu().numpy() if hasattr(results.boxes.cls, 'cpu') else results.boxes.cls
+                for box, conf, cls in zip(boxes, confs, clss):
+                    x1, y1, x2, y2 = map(int, box)
+                    class_name = CLASS_NAMES[int(cls)] if int(cls) < len(CLASS_NAMES) else str(int(cls))
+                    draw.rectangle([x1, y1, x2, y2], outline='white', width=1)
+                    draw.text((x1, y1), f'{class_name} {conf:.2f}', fill='white')
+            frame_pil = frame_pil.resize((640, 360))
             imgtk = ImageTk.PhotoImage(image=frame_pil)
             self.update_image(imgtk)
         self.root.after(200, self.update_image_loop)

@@ -1,0 +1,8 @@
+# YOLOv8 data config for Foxhole gameplay
+# Сохраните этот файл как foxhole_data.yaml
+
+names:
+train: dataset/train/images
+val: dataset/valid/images
+nc: 3
+names: ['player', 'scrap_pile', 'terrain']

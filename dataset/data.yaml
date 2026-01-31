@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 3
+names: ['player', 'scrap_pile', 'terrain']
+
+roboflow:
+  workspace: foxhole-agent
+  project: foxhole-scrap
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/foxhole-agent/foxhole-scrap/dataset/2
